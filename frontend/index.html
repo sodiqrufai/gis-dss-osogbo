@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GIS-DSS | Osogbo Business Location Intelligence</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<div id="app">
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <h1>GIS-DSS</h1>
+    <p class="subtitle">Business Location Intelligence — Osogbo</p>
+
+    <div class="panel">
+      <h3>1. Select Business Type</h3>
+      <select id="businessType">
+        <option value="">— General Analysis —</option>
+        <option value="pharmacy">Pharmacy</option>
+        <option value="supermarket">Supermarket / Grocery</option>
+        <option value="electronics">Electronics Store</option>
+        <option value="fast_food">Restaurant / Fast Food</option>
+        <option value="bank">Bank / Financial Services</option>
+        <option value="car_repair">Auto Repair / Mechanic</option>
+        <option value="clothes">Clothing / Fashion</option>
+        <option value="fuel">Fuel Station</option>
+      </select>
+      <p class="hint" id="businessHint">Showing general-purpose suitability across all zones. Select a business type to recalculate scores based on existing competition.</p>
+    </div>
+
+    <div class="panel">
+      <h3>2. Search Location</h3>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="e.g. Old Garage, Oja-Oba..."/>
+        <button id="searchBtn">Go</button>
+      </div>
+      <div id="searchStatus" class="hint"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Map Layers</h3>
+      <label>
+        <input type="checkbox" id="toggleSuitability" checked/>
+        Show Suitability Zones
+      </label>
+      <label>
+        <input type="checkbox" id="toggleRoads" checked/>
+        Show Major Roads
+      </label>
+      <label>
+        <input type="checkbox" id="togglePOIs" checked/>
+        Show Business POIs
+      </label>
+    </div>
+
+    <div class="panel">
+      <h3>Legend — Suitability</h3>
+      <div class="legend-item"><span class="swatch" style="background:#006837"></span> Excellent (70-100)</div>
+      <div class="legend-item"><span class="swatch" style="background:#78c679"></span> Good (55-70)</div>
+      <div class="legend-item"><span class="swatch" style="background:#ffffbf"></span> Moderate (45-55)</div>
+      <div class="legend-item"><span class="swatch" style="background:#fdae61"></span> Low (30-45)</div>
+      <div class="legend-item"><span class="swatch" style="background:#d73027"></span> Poor (0-30)</div>
+    </div>
+
+    <div class="panel">
+      <h3 id="topZonesTitle">Top Recommended Zones</h3>
+      <div id="topZonesList">Loading...</div>
+    </div>
+
+    <div class="panel" id="statsPanel">
+      <h3>Dataset Summary</h3>
+      <div id="statsContent">Loading...</div>
+    </div>
+
+    <div class="panel">
+      <h3>Selected Zone</h3>
+      <div id="zoneInfo">Click a zone on the map to see details.</div>
+    </div>
+  </aside>
+
+  <!-- Map -->
+  <main id="map-container">
+    <div id="loadingOverlay">
+      <div class="spinner"></div>
+      <p>Loading Osogbo spatial data...</p>
+    </div>
+    <div id="map"></div>
+  </main>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
