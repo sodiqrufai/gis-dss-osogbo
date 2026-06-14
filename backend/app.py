@@ -12,7 +12,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Build DB URL from environment variables
-DB_URL="postgresql://postgres.hfiynpnobxeigevxmoji:[YOUR-PASSWORD]@aws-0-eu-west-1.pooler.supabase.com:5432/postgres"
+DB_URL="postgresql://postgres.hfiynpnobxeigevxmoji:Siju_ade2004@aws-0-eu-west-1.pooler.supabase.com:5432/postgres"
 engine = create_engine(DB_URL)
 
 
