@@ -1,4 +1,4 @@
-const API_BASE = "http://127.0.0.1:5000";
+const API_BASE = "https://gis-dss-osogbo.onrender.com";
 
 // ── Initialize map centered on Osogbo ──────────────────────────────────────
 const map = L.map('map').setView([7.7700, 4.5600], 12);
