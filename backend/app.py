@@ -12,8 +12,15 @@ app = Flask(__name__)
 CORS(app)
 
 # Build DB URL from environment variables
-DB_URL="postgresql://postgres.hfiynpnobxeigevxmoji:Siju_ade2004@aws-0-eu-west-1.pooler.supabase.com:5432/postgres"
-engine = create_engine(DB_URL)
+DB_URL = "postgresql://postgres.hfiynpnobxeigevxmoji:3ZOh650G2e36X0F7@aws-0-eu-west-1.pooler.supabase.com:5432/postgres"
+engine = create_engine(
+    DB_URL,
+    pool_pre_ping=True,
+    pool_recycle=300,
+    connect_args={
+        "connect_timeout": 10,
+    }
+)
 
 
 def postgis_to_geojson(rows, columns):
