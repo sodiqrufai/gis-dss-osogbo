@@ -3,96 +3,1279 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>GIS-DSS | Osogbo Business Location Intelligence</title>
-
+<title>BizLocate Osogbo — Find Your Best Business Location</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="css/style.css"/>
+<style>
+:root {
+  --navy:    #0f1f3d;
+  --navy2:   #1a3260;
+  --gold:    #c9922a;
+  --gold2:   #e8b84b;
+  --cream:   #faf8f4;
+  --white:   #ffffff;
+  --text:    #1a1a2e;
+  --muted:   #6b7280;
+  --border:  #e5e7eb;
+  --green:   #059669;
+  --red:     #dc2626;
+  --amber:   #d97706;
+  --display: 'Playfair Display', Georgia, serif;
+  --body:    'Inter', system-ui, sans-serif;
+  --shadow:  0 4px 24px rgba(15,31,61,0.10);
+  --shadow2: 0 8px 40px rgba(15,31,61,0.16);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--body); background: var(--cream); color: var(--text); min-height: 100vh; }
+
+/* ── NAV ── */
+nav {
+  background: var(--navy);
+  padding: 0 5vw;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+}
+.nav-logo {
+  font-family: var(--display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -0.01em;
+}
+.nav-logo span { color: var(--gold2); }
+.nav-tag {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+}
+
+/* ── HERO ── */
+#hero {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 60%, #1e4080 100%);
+  padding: 5rem 5vw 4rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+#hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold2);
+  background: rgba(201,146,42,0.12);
+  border: 1px solid rgba(201,146,42,0.25);
+  padding: 0.35rem 1rem;
+  border-radius: 50px;
+  margin-bottom: 1.5rem;
+}
+#hero h1 {
+  font-family: var(--display);
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+  position: relative;
+}
+#hero h1 em { color: var(--gold2); font-style: normal; }
+#hero p {
+  font-size: 1.05rem;
+  color: rgba(255,255,255,0.65);
+  max-width: 540px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.7;
+}
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  flex-wrap: wrap;
+  position: relative;
+}
+.hero-stat-num {
+  font-family: var(--display);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--gold2);
+  display: block;
+  line-height: 1;
+}
+.hero-stat-label {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 0.3rem;
+}
+
+/* ── WIZARD CONTAINER ── */
+#wizard-section {
+  max-width: 860px;
+  margin: -2rem auto 4rem;
+  padding: 0 1.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* ── PROGRESS BAR ── */
+.progress-bar {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 1.5rem 2rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.progress-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+.progress-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+  z-index: 0;
+  transition: background 0.3s;
+}
+.progress-step.done:not(:last-child)::after { background: var(--gold); }
+.step-circle {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--border);
+  color: var(--muted);
+  position: relative; z-index: 1;
+  transition: all 0.3s;
+  border: 2px solid var(--border);
+}
+.progress-step.active .step-circle {
+  background: var(--navy);
+  color: var(--white);
+  border-color: var(--navy);
+  box-shadow: 0 0 0 4px rgba(15,31,61,0.12);
+}
+.progress-step.done .step-circle {
+  background: var(--gold);
+  color: var(--white);
+  border-color: var(--gold);
+}
+.step-label {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--muted);
+  margin-top: 0.4rem;
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+.progress-step.active .step-label { color: var(--navy); font-weight: 600; }
+.progress-step.done .step-label { color: var(--gold); }
+
+/* ── WIZARD CARD ── */
+.wizard-card {
+  background: var(--white);
+  border-radius: 20px;
+  box-shadow: var(--shadow2);
+  overflow: hidden;
+}
+.wizard-header {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+  padding: 2rem 2.5rem 1.8rem;
+}
+.wizard-step-tag {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold2);
+  margin-bottom: 0.5rem;
+}
+.wizard-header h2 {
+  font-family: var(--display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 0.4rem;
+}
+.wizard-header p {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.5;
+}
+.wizard-body { padding: 2rem 2.5rem; }
+
+/* ── FORM ELEMENTS ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+.form-field { display: flex; flex-direction: column; gap: 0.4rem; }
+.form-field.full { grid-column: 1 / -1; }
+.form-field label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--navy);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.form-field input,
+.form-field select,
+.form-field textarea {
+  font-family: var(--body);
+  font-size: 0.92rem;
+  color: var(--text);
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  appearance: none;
+}
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(15,31,61,0.08);
+  background: var(--white);
+}
+
+/* ── BUSINESS TYPE CARDS ── */
+.business-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+.biz-card {
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 1.1rem 0.8rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--cream);
+  user-select: none;
+}
+.biz-card:hover { border-color: var(--navy); background: var(--white); }
+.biz-card.selected {
+  border-color: var(--gold);
+  background: #fff9f0;
+  box-shadow: 0 0 0 3px rgba(201,146,42,0.12);
+}
+.biz-icon { font-size: 1.8rem; margin-bottom: 0.5rem; display: block; }
+.biz-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1.3;
+}
+
+/* ── BUDGET SLIDER ── */
+.budget-display {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.budget-amount {
+  font-family: var(--display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+.budget-label { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
+input[type="range"] {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, var(--gold) 0%, var(--gold) 50%, var(--border) 50%);
+  outline: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  appearance: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--navy);
+  cursor: pointer;
+  border: 3px solid var(--white);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+}
+
+/* ── TOGGLE OPTIONS ── */
+.toggle-group { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.toggle-btn {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.5rem 1.1rem;
+  border-radius: 50px;
+  border: 1.5px solid var(--border);
+  background: var(--cream);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+.toggle-btn:hover { border-color: var(--navy); color: var(--navy); }
+.toggle-btn.active { background: var(--navy); color: var(--white); border-color: var(--navy); }
+
+/* ── WIZARD FOOTER ── */
+.wizard-footer {
+  padding: 1.5rem 2.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.btn-back {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+.btn-back:hover { background: var(--cream); color: var(--navy); }
+.btn-next {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--white);
+  background: var(--navy);
+  border: none;
+  cursor: pointer;
+  padding: 0.85rem 2.2rem;
+  border-radius: 10px;
+  transition: all 0.2s;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.btn-next:hover { background: var(--navy2); transform: translateY(-1px); box-shadow: var(--shadow); }
+.btn-next.gold { background: var(--gold); }
+.btn-next.gold:hover { background: var(--gold2); }
+
+/* ── LOADING STATE ── */
+#loading-screen {
+  display: none;
+  text-align: center;
+  padding: 4rem 2rem;
+}
+.loading-spinner {
+  width: 52px; height: 52px;
+  border: 4px solid var(--border);
+  border-top-color: var(--navy);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  margin: 0 auto 1.5rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-title {
+  font-family: var(--display);
+  font-size: 1.4rem;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+}
+.loading-sub { font-size: 0.88rem; color: var(--muted); }
+.loading-steps { list-style: none; margin-top: 1.5rem; }
+.loading-steps li {
+  font-size: 0.82rem;
+  color: var(--muted);
+  padding: 0.35rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: color 0.3s;
+}
+.loading-steps li.done { color: var(--green); }
+.loading-steps li.active { color: var(--navy); font-weight: 600; }
+
+/* ── RESULTS SECTION ── */
+#results-section { display: none; }
+.results-header {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+  padding: 2rem 2.5rem;
+  border-radius: 20px 20px 0 0;
+}
+.results-header h2 {
+  font-family: var(--display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 0.3rem;
+}
+.results-header p { font-size: 0.85rem; color: rgba(255,255,255,0.55); }
+
+/* ── MAP ── */
+#result-map {
+  height: 380px;
+  width: 100%;
+  border: none;
+}
+
+/* ── LOCATION CARDS ── */
+.locations-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding: 1.5rem 2.5rem;
+}
+.location-card {
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.25s;
+  cursor: pointer;
+  background: var(--white);
+}
+.location-card:hover { box-shadow: var(--shadow2); transform: translateY(-3px); }
+.location-card.rank-1 { border-color: var(--gold); }
+.location-card.rank-2 { border-color: #94a3b8; }
+.location-card.rank-3 { border-color: #b45309; }
+
+.location-card-header {
+  padding: 1rem 1.2rem 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.rank-badge {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--white);
+  flex-shrink: 0;
+}
+.rank-1 .rank-badge { background: var(--gold); }
+.rank-2 .rank-badge { background: #64748b; }
+.rank-3 .rank-badge { background: #92400e; }
+
+.location-zone {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.location-score-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  margin-top: 0.1rem;
+}
+.location-score {
+  font-family: var(--display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1;
+}
+.location-score-max { font-size: 0.75rem; color: var(--muted); }
+
+.score-bar {
+  height: 5px;
+  background: var(--border);
+  margin: 0 1.2rem 0.8rem;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.score-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.8s ease;
+}
+.rank-1 .score-bar-fill { background: var(--gold); }
+.rank-2 .score-bar-fill { background: #64748b; }
+.rank-3 .score-bar-fill { background: #92400e; }
+
+.location-body { padding: 0 1.2rem 1.2rem; }
+.location-reason {
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--muted);
+  margin-bottom: 0.8rem;
+}
+.location-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.loc-tag {
+  font-size: 0.68rem;
+  font-weight: 500;
+  padding: 0.2rem 0.6rem;
+  border-radius: 50px;
+  background: var(--cream);
+  color: var(--navy);
+  border: 1px solid var(--border);
+}
+
+/* ── DETAIL PANEL ── */
+.detail-panel {
+  margin: 0 2.5rem 1.5rem;
+  background: var(--cream);
+  border-radius: 14px;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+}
+.detail-panel h3 {
+  font-family: var(--display);
+  font-size: 1.1rem;
+  color: var(--navy);
+  margin-bottom: 1rem;
+}
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.8rem;
+}
+.detail-stat {
+  background: var(--white);
+  border-radius: 10px;
+  padding: 0.9rem;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+.detail-stat-num {
+  font-family: var(--display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--navy);
+  display: block;
+}
+.detail-stat-label {
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 0.2rem;
+}
+
+/* ── RESTART BUTTON ── */
+.restart-row {
+  padding: 1rem 2.5rem 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+.btn-restart {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--navy);
+  background: var(--white);
+  border: 1.5px solid var(--navy);
+  cursor: pointer;
+  padding: 0.8rem 2rem;
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+.btn-restart:hover { background: var(--navy); color: var(--white); }
+
+/* ── HOW IT WORKS ── */
+#how-it-works {
+  background: var(--white);
+  padding: 5rem 5vw;
+  text-align: center;
+}
+#how-it-works h2 {
+  font-family: var(--display);
+  font-size: 2rem;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+}
+#how-it-works .sub {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin-bottom: 3rem;
+}
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.how-step { text-align: center; }
+.how-num {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--white);
+  font-family: var(--display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1rem;
+}
+.how-icon { font-size: 1.6rem; margin-bottom: 0.6rem; }
+.how-title { font-size: 0.88rem; font-weight: 600; color: var(--navy); margin-bottom: 0.4rem; }
+.how-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--navy);
+  padding: 2rem 5vw;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+footer p { font-size: 0.78rem; color: rgba(255,255,255,0.35); }
+.footer-logo { font-family: var(--display); font-size: 1rem; color: var(--white); }
+.footer-logo span { color: var(--gold2); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .locations-grid { grid-template-columns: 1fr; }
+  .detail-grid { grid-template-columns: repeat(2, 1fr); }
+  .steps-grid { grid-template-columns: repeat(2, 1fr); }
+  .wizard-body, .wizard-footer, .wizard-header { padding-left: 1.2rem; padding-right: 1.2rem; }
+  .locations-grid { padding: 1rem; }
+  .detail-panel, .restart-row { margin-left: 1rem; margin-right: 1rem; }
+}
+</style>
 </head>
 <body>
 
-<div id="app">
-  <!-- Sidebar -->
-  <aside id="sidebar">
-    <h1>GIS-DSS</h1>
-    <p class="subtitle">Business Location Intelligence — Osogbo</p>
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Biz<span>Locate</span> Osogbo</div>
+  <div class="nav-tag">GIS Decision Support System</div>
+</nav>
 
-    <div class="panel">
-      <h3>1. Select Business Type</h3>
-      <select id="businessType">
-        <option value="">— General Analysis —</option>
-        <option value="pharmacy">Pharmacy</option>
-        <option value="supermarket">Supermarket / Grocery</option>
-        <option value="electronics">Electronics Store</option>
-        <option value="fast_food">Restaurant / Fast Food</option>
-        <option value="bank">Bank / Financial Services</option>
-        <option value="car_repair">Auto Repair / Mechanic</option>
-        <option value="clothes">Clothing / Fashion</option>
-        <option value="fuel">Fuel Station</option>
-      </select>
-      <p class="hint" id="businessHint">Showing general-purpose suitability across all zones. Select a business type to recalculate scores based on existing competition.</p>
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-eyebrow">🗺 Powered by GIS + Machine Learning</div>
+  <h1>Find Your Perfect<br>Business Location in <em>Osogbo</em></h1>
+  <p>Answer 3 quick questions. Our spatial intelligence engine analyses 131 zones, 10,000+ road segments, and 64,000 buildings to pinpoint your ideal location.</p>
+  <div class="hero-stats">
+    <div>
+      <span class="hero-stat-num" id="stat-zones">131</span>
+      <div class="hero-stat-label">Zones Analysed</div>
     </div>
+    <div>
+      <span class="hero-stat-num" id="stat-roads">578</span>
+      <div class="hero-stat-label">Road Segments</div>
+    </div>
+    <div>
+      <span class="hero-stat-num">64K+</span>
+      <div class="hero-stat-label">Buildings Mapped</div>
+    </div>
+    <div>
+      <span class="hero-stat-num">5</span>
+      <div class="hero-stat-label">AHP Criteria</div>
+    </div>
+  </div>
+</section>
 
-    <div class="panel">
-      <h3>2. Search Location</h3>
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="e.g. Old Garage, Oja-Oba..."/>
-        <button id="searchBtn">Go</button>
+<!-- WIZARD -->
+<section id="wizard-section">
+
+  <!-- Progress -->
+  <div class="progress-bar">
+    <div class="progress-step active" id="prog-1">
+      <div class="step-circle">1</div>
+      <div class="step-label">Business Type</div>
+    </div>
+    <div class="progress-step" id="prog-2">
+      <div class="step-circle">2</div>
+      <div class="step-label">Budget & Scale</div>
+    </div>
+    <div class="progress-step" id="prog-3">
+      <div class="step-circle">3</div>
+      <div class="step-label">Preferences</div>
+    </div>
+    <div class="progress-step" id="prog-4">
+      <div class="step-circle">✓</div>
+      <div class="step-label">Results</div>
+    </div>
+  </div>
+
+  <!-- Wizard Card -->
+  <div class="wizard-card" id="wizard-card">
+
+    <!-- STEP 1 -->
+    <div id="step-1">
+      <div class="wizard-header">
+        <div class="wizard-step-tag">Step 1 of 3</div>
+        <h2>What type of business are you opening?</h2>
+        <p>Select the category that best describes your planned business. This helps us identify competitor locations and calculate market saturation.</p>
       </div>
-      <div id="searchStatus" class="hint"></div>
+      <div class="wizard-body">
+        <div class="business-grid">
+          <div class="biz-card" data-value="pharmacy" onclick="selectBiz(this)">
+            <span class="biz-icon">💊</span>
+            <div class="biz-label">Pharmacy</div>
+          </div>
+          <div class="biz-card" data-value="supermarket" onclick="selectBiz(this)">
+            <span class="biz-icon">🛒</span>
+            <div class="biz-label">Supermarket / Grocery</div>
+          </div>
+          <div class="biz-card" data-value="electronics" onclick="selectBiz(this)">
+            <span class="biz-icon">📱</span>
+            <div class="biz-label">Electronics Store</div>
+          </div>
+          <div class="biz-card" data-value="fast_food" onclick="selectBiz(this)">
+            <span class="biz-icon">🍽️</span>
+            <div class="biz-label">Restaurant / Fast Food</div>
+          </div>
+          <div class="biz-card" data-value="bank" onclick="selectBiz(this)">
+            <span class="biz-icon">🏦</span>
+            <div class="biz-label">Bank / Finance</div>
+          </div>
+          <div class="biz-card" data-value="car_repair" onclick="selectBiz(this)">
+            <span class="biz-icon">🔧</span>
+            <div class="biz-label">Auto Repair</div>
+          </div>
+          <div class="biz-card" data-value="clothes" onclick="selectBiz(this)">
+            <span class="biz-icon">👗</span>
+            <div class="biz-label">Clothing / Fashion</div>
+          </div>
+          <div class="biz-card" data-value="fuel" onclick="selectBiz(this)">
+            <span class="biz-icon">⛽</span>
+            <div class="biz-label">Fuel Station</div>
+          </div>
+        </div>
+        <p style="font-size:0.78rem;color:var(--muted);margin-top:0.5rem;">Select one to continue</p>
+      </div>
+      <div class="wizard-footer">
+        <span></span>
+        <button class="btn-next" onclick="goStep(2)">Continue →</button>
+      </div>
     </div>
 
-    <div class="panel">
-      <h3>Map Layers</h3>
-      <label>
-        <input type="checkbox" id="toggleSuitability" checked/>
-        Show Suitability Zones
-      </label>
-      <label>
-        <input type="checkbox" id="toggleRoads" checked/>
-        Show Major Roads
-      </label>
-      <label>
-        <input type="checkbox" id="togglePOIs" checked/>
-        Show Business POIs
-      </label>
+    <!-- STEP 2 -->
+    <div id="step-2" style="display:none">
+      <div class="wizard-header">
+        <div class="wizard-step-tag">Step 2 of 3</div>
+        <h2>What's your budget and scale?</h2>
+        <p>Your investment range helps us filter zones by commercial density and infrastructure quality — higher-traffic zones suit larger budgets.</p>
+      </div>
+      <div class="wizard-body">
+        <div class="budget-display">
+          <div class="budget-amount" id="budgetDisplay">₦2,500,000</div>
+          <div class="budget-label">Estimated startup budget</div>
+        </div>
+        <input type="range" id="budgetSlider" min="500000" max="10000000" step="500000" value="2500000"
+               oninput="updateBudget(this.value)"/>
+        <div class="range-labels">
+          <span>₦500K</span>
+          <span>₦5M</span>
+          <span>₦10M</span>
+        </div>
+
+        <div style="margin-top:1.8rem">
+          <div class="form-field">
+            <label>Shop Size Needed</label>
+            <div class="toggle-group" id="sizeGroup">
+              <div class="toggle-btn active" onclick="toggleSelect(this,'sizeGroup')" data-value="small">Small (1–2 rooms)</div>
+              <div class="toggle-btn" onclick="toggleSelect(this,'sizeGroup')" data-value="medium">Medium (3–5 rooms)</div>
+              <div class="toggle-btn" onclick="toggleSelect(this,'sizeGroup')" data-value="large">Large (full floor)</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:1.5rem">
+          <div class="form-field">
+            <label>Expected Daily Customers</label>
+            <div class="toggle-group" id="custGroup">
+              <div class="toggle-btn active" onclick="toggleSelect(this,'custGroup')" data-value="low">Under 50</div>
+              <div class="toggle-btn" onclick="toggleSelect(this,'custGroup')" data-value="medium">50–200</div>
+              <div class="toggle-btn" onclick="toggleSelect(this,'custGroup')" data-value="high">200+</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wizard-footer">
+        <button class="btn-back" onclick="goStep(1)">← Back</button>
+        <button class="btn-next" onclick="goStep(3)">Continue →</button>
+      </div>
     </div>
 
-    <div class="panel">
-      <h3>Legend — Suitability</h3>
-      <div class="legend-item"><span class="swatch" style="background:#006837"></span> Excellent (70-100)</div>
-      <div class="legend-item"><span class="swatch" style="background:#78c679"></span> Good (55-70)</div>
-      <div class="legend-item"><span class="swatch" style="background:#ffffbf"></span> Moderate (45-55)</div>
-      <div class="legend-item"><span class="swatch" style="background:#fdae61"></span> Low (30-45)</div>
-      <div class="legend-item"><span class="swatch" style="background:#d73027"></span> Poor (0-30)</div>
+    <!-- STEP 3 -->
+    <div id="step-3" style="display:none">
+      <div class="wizard-header">
+        <div class="wizard-step-tag">Step 3 of 3</div>
+        <h2>Any location preferences?</h2>
+        <p>Optional but helpful — these preferences fine-tune the recommendation engine to match your specific operational needs.</p>
+      </div>
+      <div class="wizard-body">
+        <div class="form-grid">
+          <div class="form-field full">
+            <label>Preferred Area in Osogbo (optional)</label>
+            <input type="text" id="prefArea" placeholder="e.g. Old Garage, Oke-Fia, Igbonna..."/>
+          </div>
+          <div class="form-field full">
+            <label>Avoid Areas (optional)</label>
+            <input type="text" id="avoidArea" placeholder="e.g. Flood-prone zones, far from transport..."/>
+          </div>
+        </div>
+
+        <div style="margin-top:1.5rem">
+          <div class="form-field">
+            <label>Competitor Tolerance</label>
+            <div class="toggle-group" id="compGroup">
+              <div class="toggle-btn active" onclick="toggleSelect(this,'compGroup')" data-value="avoid">Avoid areas with competitors</div>
+              <div class="toggle-btn" onclick="toggleSelect(this,'compGroup')" data-value="neutral">Neutral — doesn't matter</div>
+              <div class="toggle-btn" onclick="toggleSelect(this,'compGroup')" data-value="cluster">Cluster with competitors (market area)</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:1.5rem">
+          <div class="form-field">
+            <label>Priority Factor</label>
+            <div class="toggle-group" id="priorityGroup">
+              <div class="toggle-btn active" onclick="toggleSelect(this,'priorityGroup')" data-value="foot_traffic">High foot traffic</div>
+              <div class="toggle-btn" onclick="toggleSelect(this,'priorityGroup')" data-value="road_access">Road accessibility</div>
+              <div class="toggle-btn" onclick="toggleSelect(this,'priorityGroup')" data-value="population">Dense population</div>
+              <div class="toggle-btn" onclick="toggleSelect(this,'priorityGroup')" data-value="low_competition">Low competition</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wizard-footer">
+        <button class="btn-back" onclick="goStep(2)">← Back</button>
+        <button class="btn-next gold" onclick="runAnalysis()">🔍 Find My Location</button>
+      </div>
     </div>
 
-    <div class="panel">
-      <h3 id="topZonesTitle">Top Recommended Zones</h3>
-      <div id="topZonesList">Loading...</div>
+    <!-- LOADING -->
+    <div id="loading-screen">
+      <div class="loading-spinner"></div>
+      <div class="loading-title">Analysing Osogbo...</div>
+      <div class="loading-sub">Running spatial intelligence across 131 zones</div>
+      <ul class="loading-steps">
+        <li id="ls-1">⏳ Querying spatial database</li>
+        <li id="ls-2">⏳ Calculating competitor density</li>
+        <li id="ls-3">⏳ Running AHP weighted overlay</li>
+        <li id="ls-4">⏳ Applying ML suitability model</li>
+        <li id="ls-5">⏳ Ranking best locations</li>
+      </ul>
     </div>
 
-    <div class="panel" id="statsPanel">
-      <h3>Dataset Summary</h3>
-      <div id="statsContent">Loading...</div>
+    <!-- RESULTS -->
+    <div id="results-section">
+      <div class="results-header">
+        <h2 id="results-title">Top 3 Recommended Locations</h2>
+        <p id="results-sub">Based on your business profile and spatial analysis of Osogbo</p>
+      </div>
+
+      <!-- Map -->
+      <div id="result-map"></div>
+
+      <!-- Location Cards -->
+      <div class="locations-grid" id="locations-grid"></div>
+
+      <!-- Detail Panel -->
+      <div class="detail-panel">
+        <h3>📊 Analysis Summary</h3>
+        <div class="detail-grid" id="detail-grid"></div>
+      </div>
+
+      <!-- Restart -->
+      <div class="restart-row">
+        <button class="btn-restart" onclick="restart()">← Start New Search</button>
+        <button class="btn-next gold" onclick="window.print()">🖨 Print Report</button>
+      </div>
     </div>
 
-    <div class="panel">
-      <h3>Selected Zone</h3>
-      <div id="zoneInfo">Click a zone on the map to see details.</div>
-    </div>
-  </aside>
+  </div><!-- end wizard-card -->
+</section>
 
-  <!-- Map -->
-  <main id="map-container">
-    <div id="loadingOverlay">
-      <div class="spinner"></div>
-      <p>Loading Osogbo spatial data...</p>
+<!-- HOW IT WORKS -->
+<section id="how-it-works">
+  <h2>How BizLocate Works</h2>
+  <p class="sub">Four analytical layers combined into one recommendation</p>
+  <div class="steps-grid">
+    <div class="how-step">
+      <div class="how-num">1</div>
+      <div class="how-icon">🗺️</div>
+      <div class="how-title">Spatial Data Collection</div>
+      <div class="how-desc">Road networks, building density, and business POIs from OpenStreetMap and field surveys.</div>
     </div>
-    <div id="map"></div>
-  </main>
-</div>
+    <div class="how-step">
+      <div class="how-num">2</div>
+      <div class="how-icon">⚖️</div>
+      <div class="how-title">AHP Criteria Weighting</div>
+      <div class="how-desc">Expert-driven Multi-Criteria Decision Analysis scores each zone on accessibility, market factors, and infrastructure.</div>
+    </div>
+    <div class="how-step">
+      <div class="how-num">3</div>
+      <div class="how-icon">🤖</div>
+      <div class="how-title">Machine Learning Model</div>
+      <div class="how-desc">A trained Random Forest model (R²=0.968) predicts business viability from spatial features.</div>
+    </div>
+    <div class="how-step">
+      <div class="how-num">4</div>
+      <div class="how-icon">📍</div>
+      <div class="how-title">Ranked Recommendations</div>
+      <div class="how-desc">Your top 3 locations are returned with scores, explanations, and exact map pins.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Biz<span>Locate</span> Osogbo</div>
+  <p>GIS-Based Decision Support System · Osun State University · 2026</p>
+  <p>Data: OpenStreetMap · Model: Random Forest (R²=0.968)</p>
+</footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="js/app.js"></script>
+<script>
+const API_BASE = "https://gis-dss-osogbo.onrender.com";
+
+// ── State ──────────────────────────────────────────────────────────────────
+const state = {
+  businessType: null,
+  businessLabel: null,
+  budget: 2500000,
+  shopSize: 'small',
+  customers: 'low',
+  prefArea: '',
+  avoidArea: '',
+  competitorTolerance: 'avoid',
+  priority: 'foot_traffic'
+};
+
+let resultMap = null;
+let currentStep = 1;
+
+// ── Load live stats ────────────────────────────────────────────────────────
+fetch(`${API_BASE}/api/stats`)
+  .then(r => r.json())
+  .then(d => {
+    if (d.total_zones) document.getElementById('stat-zones').textContent = d.total_zones;
+    if (d.total_road_segments) document.getElementById('stat-roads').textContent = d.total_road_segments;
+  }).catch(() => {});
+
+// ── Business type selection ────────────────────────────────────────────────
+function selectBiz(el) {
+  document.querySelectorAll('.biz-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.businessType = el.dataset.value;
+  state.businessLabel = el.querySelector('.biz-label').textContent;
+}
+
+// ── Budget slider ──────────────────────────────────────────────────────────
+function updateBudget(val) {
+  state.budget = parseInt(val);
+  const formatted = new Intl.NumberFormat('en-NG', {
+    style: 'currency', currency: 'NGN', maximumFractionDigits: 0
+  }).format(val);
+  document.getElementById('budgetDisplay').textContent = formatted;
+  const pct = ((val - 500000) / (10000000 - 500000)) * 100;
+  document.getElementById('budgetSlider').style.background =
+    `linear-gradient(to right, var(--gold) ${pct}%, var(--border) ${pct}%)`;
+}
+
+// ── Toggle buttons ─────────────────────────────────────────────────────────
+function toggleSelect(el, groupId) {
+  document.querySelectorAll(`#${groupId} .toggle-btn`).forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  if (groupId === 'sizeGroup') state.shopSize = el.dataset.value;
+  if (groupId === 'custGroup') state.customers = el.dataset.value;
+  if (groupId === 'compGroup') state.competitorTolerance = el.dataset.value;
+  if (groupId === 'priorityGroup') state.priority = el.dataset.value;
+}
+
+// ── Step navigation ────────────────────────────────────────────────────────
+function goStep(n) {
+  if (n === 2 && !state.businessType) {
+    alert('Please select a business type to continue.');
+    return;
+  }
+  state.prefArea = document.getElementById('prefArea')?.value || '';
+  state.avoidArea = document.getElementById('avoidArea')?.value || '';
+
+  document.getElementById(`step-${currentStep}`)?.style && (document.getElementById(`step-${currentStep}`).style.display = 'none');
+  document.getElementById(`step-${n}`).style.display = 'block';
+
+  // Update progress
+  for (let i = 1; i <= 4; i++) {
+    const prog = document.getElementById(`prog-${i}`);
+    prog.classList.remove('active', 'done');
+    if (i < n) prog.classList.add('done');
+    if (i === n) prog.classList.add('active');
+  }
+  currentStep = n;
+  document.getElementById('wizard-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Run analysis ───────────────────────────────────────────────────────────
+async function runAnalysis() {
+  state.prefArea = document.getElementById('prefArea')?.value || '';
+
+  document.getElementById('step-3').style.display = 'none';
+  document.getElementById('loading-screen').style.display = 'block';
+  document.getElementById('prog-4').classList.add('active');
+
+  const steps = ['ls-1','ls-2','ls-3','ls-4','ls-5'];
+  for (let i = 0; i < steps.length; i++) {
+    await delay(600);
+    document.getElementById(steps[i]).className = 'done';
+    document.getElementById(steps[i]).textContent = '✅ ' + document.getElementById(steps[i]).textContent.replace('⏳ ','');
+    if (i + 1 < steps.length) {
+      document.getElementById(steps[i+1]).className = 'active';
+    }
+  }
+
+  await delay(400);
+
+  try {
+    const penaltyMap = {
+      avoid:   10,
+      neutral: 5,
+      cluster: 0
+    };
+    const penalty = penaltyMap[state.competitorTolerance] || 8;
+
+    const res = await fetch(`${API_BASE}/api/recommend?type=${encodeURIComponent(state.businessType)}`);
+    const data = await res.json();
+
+    // Sort and get top 3
+    const sorted = data.features
+      .map(f => ({
+        ...f,
+        finalScore: computeFinalScore(f, penalty)
+      }))
+      .sort((a, b) => b.finalScore - a.finalScore)
+      .slice(0, 3);
+
+    showResults(sorted);
+  } catch (e) {
+    alert('Error connecting to analysis server. Please try again.');
+    restart();
+  }
+}
+
+function computeFinalScore(feature, penaltyPerCompetitor) {
+  const p = feature.properties;
+  const base = p.composite_score || 0;
+  const competitors = p.competitor_count || 0;
+  const penalty = Math.min(competitors * penaltyPerCompetitor, 40);
+
+  // Priority boost
+  let boost = 0;
+  if (state.priority === 'road_access' && p.ahp_score > 50) boost = 5;
+  if (state.priority === 'population' && p.ml_score > 50) boost = 5;
+  if (state.priority === 'low_competition' && competitors === 0) boost = 8;
+
+  return Math.max(0, base - penalty + boost);
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── Show Results ───────────────────────────────────────────────────────────
+function showResults(zones) {
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('results-section').style.display = 'block';
+
+  document.getElementById('results-title').textContent =
+    `Top 3 Locations for Your ${state.businessLabel}`;
+  document.getElementById('results-sub').textContent =
+    `Analysed ${state.businessType} suitability across 131 zones in Osogbo · Budget: ${formatCurrency(state.budget)}`;
+
+  // Map
+  initResultMap(zones);
+
+  // Cards
+  const grid = document.getElementById('locations-grid');
+  grid.innerHTML = '';
+  zones.forEach((zone, i) => {
+    const p = zone.properties;
+    const score = zone.finalScore;
+    const rank = i + 1;
+    const reason = generateReason(p, score, rank, i);
+
+    const card = document.createElement('div');
+    card.className = `location-card rank-${rank}`;
+    card.onclick = () => flyToZone(zone, rank);
+    card.innerHTML = `
+      <div class="location-card-header">
+        <div class="rank-badge">#${rank}</div>
+        <div>
+          <div class="location-zone">Zone ${p.zone_id}</div>
+          <div class="location-score-row">
+            <span class="location-score">${score.toFixed(1)}</span>
+            <span class="location-score-max">/ 100</span>
+          </div>
+        </div>
+      </div>
+      <div class="score-bar">
+        <div class="score-bar-fill" style="width:${score}%"></div>
+      </div>
+      <div class="location-body">
+        <p class="location-reason">${reason}</p>
+        <div class="location-tags">
+          ${p.competitor_count > 0 ? `<span class="loc-tag">⚠ ${p.competitor_count} competitor${p.competitor_count > 1 ? 's' : ''} nearby</span>` : '<span class="loc-tag">✅ No competitors</span>'}
+          ${p.ahp_score > 50 ? '<span class="loc-tag">🛣 Good road access</span>' : ''}
+          ${p.ml_score > 55 ? '<span class="loc-tag">🏘 High population</span>' : ''}
+          <span class="loc-tag">AHP: ${(p.ahp_score || 0).toFixed(1)}</span>
+          <span class="loc-tag">ML: ${(p.ml_score || 0).toFixed(1)}</span>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Detail stats
+  const detailGrid = document.getElementById('detail-grid');
+  detailGrid.innerHTML = `
+    <div class="detail-stat">
+      <span class="detail-stat-num">${zones[0].finalScore.toFixed(1)}</span>
+      <div class="detail-stat-label">Top Zone Score</div>
+    </div>
+    <div class="detail-stat">
+      <span class="detail-stat-num">${state.businessLabel.split('/')[0].trim()}</span>
+      <div class="detail-stat-label">Business Type</div>
+    </div>
+    <div class="detail-stat">
+      <span class="detail-stat-num">${formatCurrency(state.budget)}</span>
+      <div class="detail-stat-label">Your Budget</div>
+    </div>
+    <div class="detail-stat">
+      <span class="detail-stat-num">${zones.reduce((s,z) => s + (z.properties.competitor_count||0), 0)}</span>
+      <div class="detail-stat-label">Total Competitors in Top 3</div>
+    </div>
+  `;
+
+  document.getElementById('wizard-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Map ────────────────────────────────────────────────────────────────────
+const RANK_COLORS = ['#c9922a', '#64748b', '#92400e'];
+
+function initResultMap(zones) {
+  if (resultMap) { resultMap.remove(); resultMap = null; }
+
+  resultMap = L.map('result-map').setView([7.7700, 4.5600], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(resultMap);
+
+  // All zones (grey)
+  fetch(`${API_BASE}/api/suitability`)
+    .then(r => r.json())
+    .then(data => {
+      L.geoJSON(data, {
+        style: { fillColor: '#e5e7eb', weight: 0.5, color: '#9ca3af', fillOpacity: 0.4 }
+      }).addTo(resultMap);
+
+      // Top 3 highlighted
+      zones.forEach((zone, i) => {
+        const color = RANK_COLORS[i];
+        L.geoJSON(zone, {
+          style: { fillColor: color, weight: 2.5, color: color, fillOpacity: 0.7 }
+        }).addTo(resultMap);
+
+        // Pin marker at centroid
+        const coords = zone.geometry.coordinates[0];
+        const lats = coords.map(c => c[1]);
+        const lngs = coords.map(c => c[0]);
+        const lat = lats.reduce((a,b)=>a+b,0)/lats.length;
+        const lng = lngs.reduce((a,b)=>a+b,0)/lngs.length;
+
+        const icon = L.divIcon({
+          html: `<div style="background:${color};color:white;width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)"><span style="transform:rotate(45deg);font-weight:bold;font-size:13px">${i+1}</span></div>`,
+          className: '',
+          iconSize: [32, 32],
+          iconAnchor: [16, 32]
+        });
+
+        L.marker([lat, lng], { icon })
+          .bindPopup(`<b>#${i+1} Recommended Zone</b><br>Zone ID: ${zone.properties.zone_id}<br>Score: ${zone.finalScore.toFixed(1)}/100`)
+          .addTo(resultMap);
+      });
+
+      // Fit map to top zones
+      const topGroup = L.geoJSON({ type: 'FeatureCollection', features: zones });
+      resultMap.fitBounds(topGroup.getBounds().pad(0.3));
+    });
+}
+
+function flyToZone(zone, rank) {
+  if (!resultMap) return;
+  const group = L.geoJSON(zone);
+  resultMap.fitBounds(group.getBounds().pad(0.2), { maxZoom: 16 });
+}
+
+// ── Reason generator ───────────────────────────────────────────────────────
+function generateReason(p, score, rank, idx) {
+  const bizLabel = state.businessLabel;
+  const competitors = p.competitor_count || 0;
+  const ahp = p.ahp_score || 0;
+  const ml = p.ml_score || 0;
+
+  const reasons = [
+    `This zone ranks highest for your ${bizLabel} with a composite score of ${score.toFixed(1)}/100. ${competitors === 0 ? 'No existing competitors were found in this zone — giving you first-mover advantage.' : `With ${competitors} existing competitor${competitors>1?'s':''}, the market is established but manageable.`} ${ahp > 50 ? 'Road accessibility is excellent.' : ''} ${ml > 55 ? 'High building density signals strong population catchment.' : ''}`,
+
+    `Second-best option for your ${bizLabel}. ${ml > ahp ? 'The ML model rates this zone highly for population density and building coverage.' : 'Strong road network accessibility makes this zone commercially attractive.'} ${competitors === 0 ? 'No direct competitors in this zone.' : `${competitors} existing ${bizLabel.toLowerCase()} business${competitors>1?'es':''} already operate here.`} Score: ${score.toFixed(1)}/100.`,
+
+    `A solid third choice${score > 45 ? ' with above-average suitability' : ''}. ${ahp > 45 ? 'Good road proximity and connectivity.' : 'Moderate road access.'} ${competitors === 0 ? 'No competing businesses detected in this zone.' : `${competitors} competitor${competitors>1?'s':''} present.`} Consider this zone if your top two choices aren't available. Score: ${score.toFixed(1)}/100.`
+  ];
+
+  return reasons[idx] || reasons[2];
+}
+
+// ── Utilities ──────────────────────────────────────────────────────────────
+function formatCurrency(n) {
+  if (n >= 1000000) return `₦${(n/1000000).toFixed(1)}M`;
+  return `₦${(n/1000).toFixed(0)}K`;
+}
+
+function restart() {
+  document.getElementById('results-section').style.display = 'none';
+  document.getElementById('loading-screen').style.display = 'none';
+  document.querySelectorAll('.biz-card').forEach(c => c.classList.remove('selected'));
+  state.businessType = null;
+  state.businessLabel = null;
+  for (let i = 1; i <= 4; i++) {
+    const p = document.getElementById(`prog-${i}`);
+    p.classList.remove('active','done');
+  }
+  document.getElementById('prog-1').classList.add('active');
+  document.getElementById('step-1').style.display = 'block';
+  currentStep = 1;
+  document.getElementById('wizard-section').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
 </body>
 </html>
