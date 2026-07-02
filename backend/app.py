@@ -92,57 +92,74 @@ def recommend():
     business_type = request.args.get("type", default="", type=str).strip()
     category_param = business_type if business_type else "__none__"
 
-    with engine.connect() as conn:
-        result = conn.execute(text("""
-            SELECT
-                s.score_id, s.zone_id, s.business_type, s.ahp_score,
-                s.ml_score, s.composite_score,
-                COALESCE(c.competitor_count, 0) AS competitor_count,
-                ST_AsGeoJSON(s.geom) as geom
-            FROM suitability_score s
-            LEFT JOIN (
-                SELECT z.zone_id, COUNT(p.poi_id) AS competitor_count
-                FROM land_use_zone z
-                JOIN business_poi p ON ST_Within(p.geom, z.geom)
-                WHERE p.category = :category
-                GROUP BY z.zone_id
-            ) c ON s.zone_id = c.zone_id
-            ORDER BY s.composite_score DESC
-        """), {"category": category_param})
-        rows = result.fetchall()
-        cols = list(result.keys())
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text("""
+                SELECT 
+                    s.score_id, s.zone_id, s.business_type, s.ahp_score,
+                    s.ml_score, s.composite_score,
+                    COALESCE(c.competitor_count, 0) AS competitor_count,
+                    ST_AsGeoJSON(s.geom) as geom
+                FROM suitability_score s
+                LEFT JOIN (
+                    SELECT z.zone_id, COUNT(p.poi_id) AS competitor_count
+                    FROM land_use_zone z
+                    JOIN business_poi p ON ST_Within(p.geom, z.geom)
+                    WHERE p.category = :category
+                    GROUP BY z.zone_id
+                ) c ON s.zone_id = c.zone_id
+                ORDER BY s.composite_score DESC
+            """), {"category": category_param})
 
-    PENALTY_PER_COMPETITOR = 8
-    MAX_PENALTY = 40
+            rows = result.fetchall()
+            cols = list(result.keys())
 
-    features = []
-    for row in rows:
-        row_dict = dict(zip(cols, row))
-        geom = row_dict.pop('geom', None)
-        competitor_count = row_dict.get('competitor_count', 0) or 0
+        PENALTY_PER_COMPETITOR = 8
+        MAX_PENALTY = 40
 
-        if business_type:
-            penalty = min(competitor_count * PENALTY_PER_COMPETITOR, MAX_PENALTY)
-        else:
-            penalty = 0
+        features = []
+        for row in rows:
+            row_dict = dict(zip(cols, row))
+            geom = row_dict.pop('geom', None)
+            if not geom:
+                continue
 
-        adjusted_score = max(0, (row_dict.get('composite_score') or 0) - penalty)
-        row_dict['penalty'] = penalty
-        row_dict['adjusted_score'] = adjusted_score
+            competitor_count = int(row_dict.get('competitor_count') or 0)
+            penalty = min(competitor_count * PENALTY_PER_COMPETITOR, MAX_PENALTY) if business_type else 0
+            composite = float(row_dict.get('composite_score') or 0)
+            adjusted_score = max(0, composite - penalty)
 
-        props = {k: (float(v) if hasattr(v, 'real') else v)
-                 for k, v in row_dict.items()}
+            row_dict['penalty'] = penalty
+            row_dict['adjusted_score'] = adjusted_score
+            row_dict['competitor_count'] = competitor_count
 
-        features.append({
-            "type": "Feature",
-            "geometry": json.loads(geom) if geom else None,
-            "properties": props
-        })
+            props = {}
+            for k, v in row_dict.items():
+                if v is None:
+                    props[k] = None
+                elif isinstance(v, float):
+                    props[k] = round(v, 4)
+                elif hasattr(v, 'real'):
+                    props[k] = float(v)
+                else:
+                    props[k] = v
 
-    features.sort(key=lambda f: f['properties']['adjusted_score'], reverse=True)
-    return jsonify({"type": "FeatureCollection", "features": features})
+            try:
+                geom_parsed = json.loads(geom)
+            except Exception:
+                continue
 
+            features.append({
+                "type": "Feature",
+                "geometry": geom_parsed,
+                "properties": props
+            })
 
+        features.sort(key=lambda f: f['properties']['adjusted_score'], reverse=True)
+        return jsonify({"type": "FeatureCollection", "features": features})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 @app.route("/api/roads")
 def get_roads():
     with engine.connect() as conn:
